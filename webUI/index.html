@@ -1,0 +1,199 @@
+<!-- Not Making anymore modifications till I put it into github & on to aandt.io
+ideas list:
+add checkmarks for played in this session & a filter
+
+WIP/Fix List:
+star rating for mods (pretty sure will have to use osu api, so might have to do something on api server, rather then on client side depending on CORS protection)
+box around filter menu
+-->
+<html>
+  <head>
+    <style>
+      * {
+        font-family: 'Roboto', sans-serif;
+      }
+      table, th, td, #filters {
+        border: 1px solid black;
+      }
+    </style>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <h1>Osu top 100 viewer & filters - Hero42</h1>
+    <button type="button" onclick="filters()">Filter Menu (enable/disable)</button><!-- This is probably not the best way to make a filter menu like this, but i dont know what im doing -->
+    <div id="filters" style="display: block;">
+      <label for="starRatingMin">Star Rating (WARNING: mods do not affect star rating):</label>
+      <input type="number" id="starRatingMin" name="starRatingMin" value="0">
+      <input type="number" id="starRatingMax" name="starRatingMax" value="10"><br><br>
+
+      <label for="accMin">Accuracy:</label>
+      <input type="number" id="accMin" name="accMin" value="0">
+      <input type="number" id="accMax" name="accMax" value="100"><br><br>
+
+      <label for="mod">Mod (Currently no support for multiple mods. Disabled if left blank):</label>
+      <input type="text" id="mod" name="mod"><br><br>
+
+      <label for="date">Date:</label>
+      <input type="date" id="date" name="date">
+      <label for="dateBefore">Before:</label>
+      <input type="radio" id="dateBefore" name="dateSelect"
+      <label for="dateAfter">After:</label>
+      <input type="radio" id="dateAfter" name="dateSelect">
+      <label for="dateDisabled">Disabled:</label>
+      <input type="radio" id="dateDisabled" name="dateSelect"><br><br>
+
+      <label for="removePlayed">Remove Played:</label>
+      <input type="checkbox" id="removePlayed" name="removePlayed"><br><br>
+
+      <button type="button" onclick="outputTable()">Update Table</button>
+      <button type="button" onclick="updateData()">Update Data</button>
+    </div><br>
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Title</th>
+          <th>Artist</th>
+          <th>Length</th>
+          <th>Diff</th>
+          <th>Star</th>
+          <th>Acc</th>
+          <th>Score</th>
+          <th>Ratio</th>
+          <th>PP</th>
+          <th>Age</th>
+          <th>Mods</th>
+          <th>Played?</th>
+        </tr>
+      </thead>
+      <tbody id="dataTable">
+      </tbody>
+    </table>
+    <script>
+      filtersHidden = false
+      apiURL = "http://localhost:3002/osuTop100/"
+
+      function timeSince(date) { // https://stackoverflow.com/a/3177838    Modifed slightly so it would only show on 2 of a unit increments, not 1.
+        var seconds = Math.floor((new Date() - date) / 1000);
+        var interval = seconds / 31536000;
+
+        if (interval > 2) {
+          return Math.floor(interval) + " years";
+        }
+        interval = seconds / 2592000;
+        if (interval > 2) {
+          return Math.floor(interval) + " months";
+        }
+        interval = seconds / 86400;
+        if (interval > 2) {
+          return Math.floor(interval) + " days";
+        }
+        interval = seconds / 3600;
+        if (interval > 2) {
+          return Math.floor(interval) + " hours";
+        }
+        interval = seconds / 60;
+        if (interval > 2) {
+          return Math.floor(interval) + " minutes";
+        }
+        return Math.floor(seconds) + " seconds";
+      }
+
+      async function updateData() {
+        let response = await fetch(apiURL)
+
+        if (response.ok) {
+          data = await response.json()
+        } else {
+          console.log("fetch error " + response.status)
+        }
+
+        console.log(data) // debug
+        outputTable()
+      }
+
+      function outputTable() {
+        document.getElementById("dataTable").innerHTML = ""
+
+        for (var i = 0; i < data.length; i++) {
+          if (document.getElementById("starRatingMin").value > data[i].beatmap.difficulty_rating || document.getElementById("starRatingMax").value < data[i].beatmap.difficulty_rating) { // example Filter, debug
+            continue;
+          }
+          if (document.getElementById("accMin").value > data[i].accuracy*100 || document.getElementById("accMax").value < data[i].accuracy*100) { // example Filter, debug
+            continue;
+          }
+          if (document.getElementById("mod").value != "") { // check if a mod check needs to be done
+            if (document.getElementById("mod").value == "NM") { // check if NM (cause NM is a bit different)
+              if (data[i].mods.length != 0) {
+                continue;
+              }
+            } else {
+              if (data[i].mods.length == 1) { // check that there is only a single mod cause we dont support multiple mods
+                if (data[i].mods[0] != document.getElementById("mod").value) {
+                  continue;
+                }
+              } else {
+                continue;
+              }
+            }
+          }
+          date = new Date(document.getElementById("date").value)
+          if (document.getElementById("dateBefore").checked) {
+            if (date.getTime() < new Date(data[i].created_at)) {
+              continue;
+            }
+          } else if (document.getElementById("dateAfter").checked) {
+            if (date.getTime() > new Date(data[i].created_at)) {
+              continue;
+            }
+          }
+
+          output = "<tr>"
+          output += "<td>"+data[i].rank+"</td>"
+          output += "<td>"+data[i].beatmapset.title+"</td>"
+          output += "<td>"+data[i].beatmapset.artist+"</td>"
+          output += "<td>"+Math.floor(data[i].beatmap.hit_length/60)+"m"+data[i].beatmap.hit_length%60+"s</td>"
+          output += "<td>"+data[i].beatmap.version+"</td>"
+          if (data[i].mods.length == 0) { // difficulty ratings are not affected by mods, and I dont have a good way to find the star rating of a modded map, so i either need to find a API to do the calc (and im too lazy to do that rn), or just give a warning until i add that.
+            output += "<td>"+data[i].beatmap.difficulty_rating+"</td>"
+          } else {
+            output += "<td>"+data[i].beatmap.difficulty_rating+"? (mods)</td>"
+          }
+          output += "<td>"+(data[i].accuracy*100).toFixed(2)+"%</td>"
+          output += "<td>"+data[i].score+"</td>"
+          output += "<td>"+(data[i].statistics.count_geki/data[i].statistics.count_300).toFixed(2)+":1</td>"
+          output += "<td>"+data[i].pp+"</td>"
+          output += "<td>"+timeSince(new Date(data[i].created_at))+"</td>"
+
+          if (data[i].mods.length == 0) {output += "<td></td>"} else if (data[i].mods.length == 1) { // dealing with num of mods
+            output += "<td>"+data[i].mods[0]+"</td>"
+          } else {
+            for (var j = 0; j < data[i].mods.length-1; j++) {
+              string += data[i].mods[j] + ", "
+            }
+            string += data[i].mods[data[i].mods.length-1]+"</td>"
+            output += string
+          }
+
+          output += "<td><input type=\"checkbox\" id=played\""+i+"\"></td>"
+
+          output += "</tr>"
+
+          document.getElementById("dataTable").innerHTML += output
+        }
+      }
+
+      function filters() {
+        if (filtersHidden) {
+          document.getElementById("filters").style = "display: block;"
+        } else {
+          document.getElementById("filters").style = "display: none;"
+        }
+        filtersHidden = !filtersHidden
+      }
+
+      updateData()
+    </script>
+  </body>
+</html>
