@@ -3,7 +3,7 @@ a custom search engine for a person's top 100 osu plays
 
 ## Usage:
 
-Warning: this script wasnt really made to be user friendly tbh.
+Warning: this script wasnt really made to be user friendly.
 
 1. install libraries & node, `npm i axios express`
 2. Set osu id. Get your osu id out of your osu profile link and then put it in the osuid variable (line 4) in api/main.js

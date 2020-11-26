@@ -48,6 +48,9 @@ box around filter menu
 
       <button type="button" onclick="outputTable()">Update Table</button>
       <button type="button" onclick="updateData()">Update Data</button>
+      <button type="button" onclick="autoUpdate()">Auto Update Table</button>
+      <p id="autoUpdateStatus">Auto Update Status: Disabled<p>
+
     </div><br>
     <table>
       <thead>
@@ -72,7 +75,9 @@ box around filter menu
     </table>
     <script>
       filtersHidden = false
-      apiURL = "http://localhost:3002/osuTop100/"
+      apiURL = "http://localhost:3002/osuTop100/api"
+      intervalId = 0
+      autoUpdateStatus = false
 
       function timeSince(date) { // https://stackoverflow.com/a/3177838    Modifed slightly so it would only show on 2 of a unit increments, not 1.
         var seconds = Math.floor((new Date() - date) / 1000);
@@ -105,6 +110,9 @@ box around filter menu
 
         if (response.ok) {
           data = await response.json()
+          for (var i = 0; i < data.length; i++) {
+            data[i].played = false
+          }
         } else {
           console.log("fetch error " + response.status)
         }
@@ -148,6 +156,11 @@ box around filter menu
               continue;
             }
           }
+          if (document.getElementById("removePlayed").checked) {
+            if (data[i].played) {
+              continue;
+            }
+          }
 
           output = "<tr>"
           output += "<td>"+data[i].rank+"</td>"
@@ -176,12 +189,16 @@ box around filter menu
             output += string
           }
 
-          output += "<td><input type=\"checkbox\" id=played\""+i+"\"></td>"
+          output += "<td><input type=\"checkbox\" onClick=\"played("+i+")\"></td>"
 
           output += "</tr>"
 
           document.getElementById("dataTable").innerHTML += output
         }
+      }
+
+      function played(i) {
+        data[i].played = !data[i].played
       }
 
       function filters() {
@@ -193,7 +210,19 @@ box around filter menu
         filtersHidden = !filtersHidden
       }
 
+      function autoUpdate() {
+        if (autoUpdateStatus) {
+          clearInterval(intervalId)
+          document.getElementById("autoUpdateStatus").innerText = "Auto Update Status: Disabled"
+        } else {
+          intervalId = setInterval(outputTable, 1000)
+          document.getElementById("autoUpdateStatus").innerText = "Auto Update Status: Enabled"
+        }
+        autoUpdateStatus = !autoUpdateStatus
+      }
+
       updateData()
+      setTimeout(autoUpdate, 5000) // make sure it runs after the updateData call.
     </script>
   </body>
 </html>
