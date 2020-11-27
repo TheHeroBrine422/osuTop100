@@ -31,6 +31,7 @@ app.get('/osuTop100/api', (req, res) => {
           console.log(error)
         })
         .then(function () {
+          console.log("/osuTop100/api")
           res.send(JSON.stringify(output))
         })
     })
@@ -42,6 +43,7 @@ app.get('/osuTop100/api', (req, res) => {
 app.get('/osuTop100/', (req, res) => {
   fs.readFile('index.html', 'utf8', (err, data) => {
     if (err) throw err;
+    console.log("/osuTop100/")
     res.send(data)
   });
 });
@@ -49,6 +51,7 @@ app.get('/osuTop100/', (req, res) => {
 app.get('/', (req, res) => {
   fs.readFile('index.html', 'utf8', (err, data) => {
     if (err) throw err;
+    console.log("/")
     res.send(data)
   });
 });
