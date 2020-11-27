@@ -189,7 +189,11 @@ box around filter menu
             output += string
           }
 
-          output += "<td><input type=\"checkbox\" onClick=\"played("+i+")\"></td>"
+          if (data[i].played) {
+            output += "<td><input type=\"checkbox\" onClick=\"played("+i+")\" checked></td>"
+          } else {
+            output += "<td><input type=\"checkbox\" onClick=\"played("+i+")\"></td>"
+          }
 
           output += "</tr>"
 
