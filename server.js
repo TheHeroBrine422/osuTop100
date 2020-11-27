@@ -41,6 +41,9 @@ app.get('/osuTop100/api', (req, res) => {
 });
 
 app.get('/osuTop100/', (req, res) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+
   fs.readFile('index.html', 'utf8', (err, data) => {
     if (err) throw err;
     console.log("/osuTop100/")
@@ -49,6 +52,9 @@ app.get('/osuTop100/', (req, res) => {
 });
 
 app.get('/', (req, res) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+
   fs.readFile('index.html', 'utf8', (err, data) => {
     if (err) throw err;
     console.log("/")
