@@ -20,9 +20,12 @@ box around filter menu
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   </head>
   <body>
-    <h1>Osu top 100 viewer & filters - Hero42</h1>
+    <h1>Osu top 100 viewer & filter</h1>
     <button type="button" onclick="filters()">Filter Menu (enable/disable)</button><!-- This is probably not the best way to make a filter menu like this, but i dont know what im doing -->
     <div id="filters" style="display: block;">
+      <label for="osuId">Osu Id (Default = Hero42):</label>
+      <input type="number" id="osuId" name="osuId" value="11361720"><br><br>
+
       <label for="starRatingMin">Star Rating (WARNING: mods do not affect star rating):</label>
       <input type="number" id="starRatingMin" name="starRatingMin" value="0">
       <input type="number" id="starRatingMax" name="starRatingMax" value="10"><br><br>
@@ -106,7 +109,7 @@ box around filter menu
       }
 
       async function updateData() {
-        let response = await fetch(apiURL)
+        let response = await fetch(apiURL+"?id="+document.getElementById("osuId").value)
 
         if (response.ok) {
           data = await response.json()
