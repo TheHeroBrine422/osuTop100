@@ -20,9 +20,8 @@ box around filter menu
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   </head>
   <body>
-    <h1>Osu top 100 viewer & filte - testing if the webHook is working</h1>
-    <button type="button" onclick="filters()">Filter Menu (enable/disable)</button><!-- This is probably not the best way to make a filter menu like this, but i dont know what im doing -->
-    <div id="filters" style="display: block;">
+    <h1>Osu top 100 viewer</h1>
+    <div id="filters">
       <label for="osuId">Osu Id (Default = Hero42):</label>
       <input type="number" id="osuId" name="osuId" value="11361720"><br><br>
 
@@ -49,11 +48,7 @@ box around filter menu
       <label for="removePlayed">Remove Played:</label>
       <input type="checkbox" id="removePlayed" name="removePlayed"><br><br>
 
-      <button type="button" onclick="outputTable()">Update Table</button>
-      <button type="button" onclick="updateData()">Update Data</button>
-      <button type="button" onclick="autoUpdate()">Auto Update Table</button>
-      <p id="autoUpdateStatus">Auto Update Status: Disabled<p>
-
+      <button type="button" onclick="updateData()">Update Data (Resets Played)</button>
     </div><br>
     <table>
       <thead>
@@ -77,7 +72,6 @@ box around filter menu
       </tbody>
     </table>
     <script>
-      filtersHidden = false
       apiURL = "http://192.168.1.6:3002/osuTop100/api"
       intervalId = 0
       autoUpdateStatus = false
@@ -121,7 +115,8 @@ box around filter menu
         }
 
         console.log(data) // debug
-        outputTable()
+        clearInterval(intervalId)
+        intervalId = setInterval(outputTable, 1000)
       }
 
       function outputTable() {
@@ -208,28 +203,7 @@ box around filter menu
         data[i].played = !data[i].played
       }
 
-      function filters() {
-        if (filtersHidden) {
-          document.getElementById("filters").style = "display: block;"
-        } else {
-          document.getElementById("filters").style = "display: none;"
-        }
-        filtersHidden = !filtersHidden
-      }
-
-      function autoUpdate() {
-        if (autoUpdateStatus) {
-          clearInterval(intervalId)
-          document.getElementById("autoUpdateStatus").innerText = "Auto Update Status: Disabled"
-        } else {
-          intervalId = setInterval(outputTable, 1000)
-          document.getElementById("autoUpdateStatus").innerText = "Auto Update Status: Enabled"
-        }
-        autoUpdateStatus = !autoUpdateStatus
-      }
-
       updateData()
-      setTimeout(autoUpdate, 5000) // make sure it runs after the updateData call.
     </script>
   </body>
 </html>
